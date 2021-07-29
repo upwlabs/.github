@@ -1,0 +1,29 @@
+name: Update RN meta
+
+on:
+  workflow_dispatch:
+    inputs:
+      checksum:
+        description: 'zip md5'
+        required: true
+      url:
+        description: 'zip download url'
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Update rn/meta.json
+        run: |
+          mkdir -p rn 
+          echo '{"checksum":"${{ github.event.inputs.checksum }}","download_url":"${{ github.event.inputs.url }}"}' > rn/meta.json
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v7
+        with:
+          message: "<rn> change to ${{ github.event.inputs.url }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

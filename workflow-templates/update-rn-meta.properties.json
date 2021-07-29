@@ -1,0 +1,5 @@
+{
+    "name": "Update RN Meta Workflow",
+    "description": "Create rn/meta.json containing checksum and download_url workflow template.",
+    "iconName": "react-native-icon"
+}
