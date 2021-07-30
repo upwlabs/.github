@@ -14,10 +14,13 @@ done
 echo '>>> copy prepare-rn.gradle/sh to all android repos' 
     for app in "${apps[@]}"; do
         repo="$app-android"
+	rm -rf ../$repo/.github/workflows
+        mkdir -p ../$repo/.github/workflows
         cp android-build/prepare_rn.gradle ../$repo/
 	cp workflow-templates/android-build.yml ../$repo/.github/workflows
 	cp workflow-templates/update-bom-version.yml ../$repo/.github/workflows
 	mkdir -p ../$repo/script
 	cp android-build/prepare_rn.sh ../$repo/script
 	cp android-build/make_build_tag.sh ../$repo/script
+	cp android-build/Makefile ../$repo
     done
