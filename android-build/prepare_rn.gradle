@@ -2,7 +2,7 @@ task clearRNBundle() {
     doLast {
         exec {
             workingDir "$rootDir"
-            commandLine 'sh', '-c', './prepare_rn.sh -c'
+            commandLine 'sh', '-c', './script/prepare_rn.sh -c'
         }
     }
 
@@ -14,7 +14,7 @@ task mergeRNBundle() {
         def moduleName = project.name
         exec {
             workingDir "$rootDir"
-            commandLine 'sh', '-c', "./prepare_rn.sh -m $moduleName -a $appName"
+            commandLine 'sh', '-c', "./script/prepare_rn.sh -m $moduleName -a $appName"
         }
     }
 }

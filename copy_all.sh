@@ -15,5 +15,6 @@ echo '>>> copy prepare-rn.gradle/sh to all android repos'
     for app in "${apps[@]}"; do
         repo="$app-android"
         cp android-build/prepare_rn.gradle ../$repo/
-	cp android-build/prepare_rn.sh ../$repo/
+	mkdir -p ../$repo/script
+	cp android-build/prepare_rn.sh ../$repo/script
     done
