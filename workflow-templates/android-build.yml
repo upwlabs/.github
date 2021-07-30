@@ -1,0 +1,61 @@
+name: Android Build
+on: 
+  push:
+    tags:
+      - build-.*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Install NDK
+        run: |
+          echo ${ANDROID_HOME}
+          sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;21.0.6113669"
+
+      - name: Gradle build
+        id: gradle-build
+        run: |
+          echo
+          command=`echo $GITHUB_REF | awk '{split($0,a,"-"); print a[2]":"a[3]}'`
+          echo ${command}
+          ./gradlew ${command} -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+          files=`find . \( -name "*.apk" -o -name "*.aab" \)`
+          file_paths=`echo $files | paste -s -d ',' -`
+          download_urls=`echo $files | sed "s#.*/#https://github.com/upwlabs/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF/#"`
+
+          echo $files
+          echo $file_paths
+          echo $download_urls
+
+          echo ::set-output name=FILE_PATHS::${files_paths}
+          echo ::set-output name=DOWNLOAD_URLS::${download_urls}
+
+      - name: Release
+        id: release
+        uses: ncipollo/release-action@v1.8.6
+        with:
+          tag: $GITHUB_REF
+          artifacts: ${{ steps.gradle-build.outputs.FILE_PATHS }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Slack 
+        env: 
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          TEXT="
+          \n${{ steps.gradle-build.outputs.DOWNLOAD_URLS }}
+          \n<@vicky> <@xinrui> <@jessie.liu>
+          \nCreator: $GITHUB_ACTOR
+          \n<@alia> <@winter> <@mandy> <@tao>
+          \nAction page: https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA/checks
+          "
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$TEXT"'"}' $slack_webhook
+        shell: bash
