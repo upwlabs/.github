@@ -18,6 +18,7 @@ echo '>>> copy prepare-rn.gradle/sh to all android repos'
         mkdir -p ../$repo/.github/workflows
         cp android-build/prepare_rn.gradle ../$repo/
 	cp workflow-templates/android-build.yml ../$repo/.github/workflows
+	cp workflow-templates/android-build-manual.yml ../$repo/.github/workflows
 	cp workflow-templates/update-bom-version.yml ../$repo/.github/workflows
 	cp workflow-templates/update-rn-meta.yml ../$repo/.github/workflows
 	mkdir -p ../$repo/script
