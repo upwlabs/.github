@@ -25,4 +25,5 @@ echo '>>> copy prepare-rn.gradle/sh to all android repos'
 	cp android-build/prepare_rn.sh ../$repo/script
 	cp android-build/make_build_tag.sh ../$repo/script
 	cp android-build/Makefile ../$repo
+	echo '>>>>> Remember change Makefile module name kaylee/emma'
     done
