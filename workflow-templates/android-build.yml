@@ -23,26 +23,26 @@ jobs:
       - name: Gradle build
         id: gradle-build
         run: |
-          echo
           command=`echo $GITHUB_REF | awk '{split($0,a,"-"); print a[2]":"a[3]}'`
-          echo ${command}
+          tag_name=`echo $GITHUB_REF | awk '{split($0,a,"/"); print a[3]}'`
+
           ./gradlew ${command} -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
-          files=`find . \( -name "*.apk" -o -name "*.aab" \)`
+
+          files=`find . \( -name "*.apk" -o -name "*.aab" \) | sed "s/\.\///"`
           file_paths=`echo $files | paste -s -d ',' -`
-          download_urls=`echo $files | sed "s#.*/#https://github.com/upwlabs/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF/#"`
+          download_urls=`echo $files | sed "s#.*/#https://github.com/$GITHUB_REPOSITORY/releases/download/$tag_name/#"`
 
           echo $files
           echo $file_paths
           echo $download_urls
 
-          echo ::set-output name=FILE_PATHS::${files_paths}
-          echo ::set-output name=DOWNLOAD_URLS::${download_urls}
+          echo "::set-output name=FILE_PATHS::$file_paths"
+          echo "::set-output name=DOWNLOAD_URLS::$download_urls"
 
       - name: Release
         id: release
         uses: ncipollo/release-action@v1.8.6
         with:
-          tag: $GITHUB_REF
           artifacts: ${{ steps.gradle-build.outputs.FILE_PATHS }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
