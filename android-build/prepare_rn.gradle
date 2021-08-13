@@ -20,7 +20,7 @@ task mergeRNBundle() {
 }
 
 afterEvaluate {
-    tasks.findAll { task -> task.name.contains('Resources') }.each {
+    tasks.findAll { task -> task.name=='preBuild' }.each {
         it.dependsOn(mergeRNBundle)
     }
 }
