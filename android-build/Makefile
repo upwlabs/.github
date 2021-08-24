@@ -8,8 +8,8 @@ usage:
 googleBeta: 
 	script/make_build_tag.sh -m app -c assembleGoogleBeta
 
-googleRelease:
-	script/make_build_tag.sh -m app -c assembleGoogleRelease
+bundleGoogleRelease:
+	script/make_build_tag.sh -m app -c bundleGoogleRelease
 
 samsungBeta: 
 	script/make_build_tag.sh -m app -c assembleSamsungBeta

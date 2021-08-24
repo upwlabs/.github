@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      NDK: 21.0.6113669
     steps:
       - uses: actions/checkout@v2
 
@@ -15,10 +17,26 @@ jobs:
         with:
           java-version: 1.8
 
+      # cache saves around 15s :(
+      - name: Cache NDK
+        uses: actions/cache@v2
+        id: cache-ndk
+        with:
+          path: /usr/local/lib/android/sdk/ndk/21.0.6113669
+          key: ${{ runner.os }}-android-ndk-${{ env.NDK }}-only
       - name: Install NDK
         run: |
-          echo ${ANDROID_HOME}
-          sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;21.0.6113669"
+          echo 'cache-hit: ${{ steps.cache-ndk.outputs.cache-hit }}'
+          if [ -d $ANDROID_HOME/ndk/${{ env.NDK }} ]; then echo "ndk ${{env.NDK}} found"; else sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;${{ env.NDK }}" > log.txt; fi
+          ls ${ANDROID_HOME}/ndk
+
+      - name: Prepare keystore
+        if: contains(github.ref, 'Release')
+        run: |
+          echo "Prepare keystore for command ${{ github.event.input.command }}"
+          echo "${{ secrets.ANDROID_UPLDKEY_ASC }}" > release.keystore.asc
+          gpg -d --passphrase "${{ secrets.ANDROID_UPLDKEY_ASC_DECRYPT }}" --batch release.keystore.asc > release.keystore
+          ls -al
 
       - name: Gradle build
         id: gradle-build
@@ -28,7 +46,7 @@ jobs:
 
           ./gradlew ${command} -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
 
-          files=`find . \( -name "*.apk" -o -name "*.aab" \) | sed "s/\.\///"`
+          files=`find */build/outputs \( -name "*.apk" -o -name "*.aab" \) | sed "s/\.\///"`
           file_paths=`echo $files | paste -s -d ',' -`
           download_urls=`echo $files | sed "s#.*/#https://github.com/$GITHUB_REPOSITORY/releases/download/$tag_name/#"`
 
@@ -38,6 +56,11 @@ jobs:
 
           echo "::set-output name=FILE_PATHS::$file_paths"
           echo "::set-output name=DOWNLOAD_URLS::$download_urls"
+        env:
+          KSTOREPWD: ${{ secrets.ANDROID_UPLDKSPWD}}
+          KALIAS: ${{ secrets.ANDROID_UPLDKALIAS}}
+          KEYPWD: ${{ secrets.ANDROID_UPLDKEYPWD}}
+          KSTORE: '../release.keystore'
 
       - name: Release
         id: release
