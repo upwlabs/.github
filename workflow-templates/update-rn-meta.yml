@@ -9,7 +9,9 @@ on:
       url:
         description: 'zip download url'
         required: true
-
+      commit_hash:
+        description: 'radon bundle git commit hash'
+        required: false
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -19,7 +21,7 @@ jobs:
       - name: Update rn/meta.json
         run: |
           mkdir -p rn 
-          echo '{"checksum":"${{ github.event.inputs.checksum }}","download_url":"${{ github.event.inputs.url }}"}' > rn/meta.json
+          echo '{"commit_hash":"${{ github.event.inputs.commit_hash }}","checksum":"${{ github.event.inputs.checksum }}","download_url":"${{ github.event.inputs.url }}"}' > rn/meta.json
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v7

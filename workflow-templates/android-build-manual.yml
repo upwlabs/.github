@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up JDK 1.8
+      - name: Set up JDK
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
@@ -50,16 +50,22 @@ jobs:
           ./gradlew ${command} -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
 
           files=`find */build/outputs \( -name "*.apk" -o -name "*.aab" \) | sed "s/\.\///"`
-          file_paths=`echo $files | paste -s -d ',' -`
           download_urls=`echo $files | sed "s#.*/#https://github.com/$GITHUB_REPOSITORY/releases/download/$tag_name/#"`
 
-          echo $files
-          echo $file_paths
-          echo $download_urls
+          file_path=`echo $files | paste -s -d ',' - | awk -F ',' '{print $1}'`
+          file_name=`echo $file_path | awk -F '/' '{print $NF}'`
 
-          echo "::set-output name=TAG::$tag_name"
-          echo "::set-output name=FILE_PATHS::$file_paths"
+          s3_url=`echo $file_path | sed "s#.*/#https://s3.amazonaws.com/glow-sandbox/releases/$tag_name/#"`
+
+          echo $files
+          echo $file_path
+          echo $download_urls
+          echo $s3_url
+
+          echo "::set-output name=FILE_PATH::$file_path"
           echo "::set-output name=DOWNLOAD_URLS::$download_urls"
+          echo "::set-output name=S3_URL::$s3_url"
+          echo "::set-output name=TAG_NAME::$tag_name"
         env:
           KSTOREPWD: ${{ secrets.ANDROID_UPLDKSPWD}}
           KALIAS: ${{ secrets.ANDROID_UPLDKALIAS}}
@@ -74,6 +80,17 @@ jobs:
           artifacts: ${{ steps.gradle-build.outputs.FILE_PATHS }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_S3_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_S3_SECRET_KEY}}
+          aws-region: us-east-1
+
+      - name: Upload
+        run: |
+          aws s3 cp ${{ steps.gradle-build.outputs.FILE_PATH }} s3://glow-sandbox/releases/${{ steps.gradle-build.outputs.TAG_NAME }}/  --acl  public-read --region us-east-1 --sse
+
       - name: Slack
         env:
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
@@ -84,6 +101,8 @@ jobs:
           \nCreator: $GITHUB_ACTOR
           \n<@alia> <@winter> <@mandy> <@tao>
           \nAction page: https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA/checks
+          \n
+          \nS3: ${{ steps.gradle-build.outputs.S3_URL }}
           "
           curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$TEXT"'"}' $slack_webhook
         shell: bash
