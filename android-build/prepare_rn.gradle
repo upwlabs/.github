@@ -10,11 +10,10 @@ task clearRNBundle() {
 
 task mergeRNBundle() {
     doLast {
-        def appName = project.rootDir.name.split('-')[0]
-        def moduleName = project.name
         exec {
             workingDir "$rootDir"
-            commandLine 'sh', '-c', "./script/prepare_rn.sh -m $moduleName -a $appName"
+		// TODO change -m emma/kaylee/app -a emma/kaylee/lexie/noah
+            commandLine 'sh', '-c', "./script/prepare_rn.sh -m app -a noah"
         }
     }
 }
