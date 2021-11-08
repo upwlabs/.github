@@ -79,7 +79,7 @@ jobs:
           tag: ${{ steps.gradle-build.outputs.TAG_NAME }}
           artifacts: ${{ steps.gradle-build.outputs.FILE_PATH }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit: $GITHUB_SHA
+          commit: ${{ github.sha }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
