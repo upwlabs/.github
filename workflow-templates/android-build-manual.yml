@@ -17,7 +17,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
 
       # cache saves around 15s :(
       - name: Cache NDK
@@ -76,9 +76,10 @@ jobs:
         id: release
         uses: ncipollo/release-action@v1.8.6
         with:
-          tag: ${{ steps.gradle-build.outputs.TAG }}
-          artifacts: ${{ steps.gradle-build.outputs.FILE_PATHS }}
+          tag: ${{ steps.gradle-build.outputs.TAG_NAME }}
+          artifacts: ${{ steps.gradle-build.outputs.FILE_PATH }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          commit: $GITHUB_SHA
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
